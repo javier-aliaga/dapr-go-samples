@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-go-workflow
+spec:
+  selector:
+    matchLabels:
+      app: app-go-workflow
+  template:
+    metadata:
+      annotations:
+        dapr.io/app-id: app-go-workflow
+#        dapr.io/app-port: "3000"
+        dapr.io/app-protocol: grpc
+        dapr.io/enabled: "true"
+        dapr.io/log-level: "debug"
+        dapr.io/config: "tracing"
+        dapr.io/env: "OTEL_SERVICE_NAME=app-daprd-go-workflow"
+      labels:
+        app: app-go-workflow
+        app.kubernetes.io/name: app-go-workflow
+        app.kubernetes.io/part-of: app-go-workflow
+        app.kubernetes.io/version: 0.1.0
+    spec:
+      containers:
+      - name: app-go-workflow
+        image: localhost:5001/dapr-go-samples:latest
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+        resources:
+          limits:
+            cpu: "1"
+            memory: "2Gi"
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-go-workflow-svc
+spec:
+  selector:
+    app: app-go-workflow
+  ports:
+  - port: 80
+    targetPort: 8080
